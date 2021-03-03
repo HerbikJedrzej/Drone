@@ -1,0 +1,6 @@
+[submodule "DroneConfiguration"]
+	path = DroneConfiguration
+	url = https://github.com/HerbikJedrzej/DroneConfiguration.git
+[submodule "CommonDrivers"]
+	path = CommonDrivers
+	url = https://github.com/HerbikJedrzej/CommonDrivers.git

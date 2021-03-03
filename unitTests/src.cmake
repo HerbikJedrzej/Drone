@@ -1,0 +1,25 @@
+list(APPEND TESTS_SRC
+  main_test.cpp
+  mocks/TestBatteryObserver.cpp
+  mocks/TestDelay.cpp
+  mocks/TestEngine.cpp
+  mocks/TestGPIO.cpp
+  mocks/TestI2C.cpp
+  mocks/TestIMUsensor.cpp
+  mocks/TestMemory.cpp
+  mocks/TestRadio.cpp
+  mocks/TestRadioParser.cpp
+  src/algoritms/AltitudeProvider_test.cpp
+  src/algoritms/ComplementaryFilter_test.cpp
+  src/algoritms/EngineControl_test.cpp
+  src/algoritms/Kalman_test.cpp
+  src/algoritms/Matrix_test.cpp
+  src/algoritms/PID_test.cpp
+  src/algoritms/StepingMeanFilter_test.cpp
+  src/common/ADC_test.cpp
+  src/common/BatteryObserver_test.cpp
+  src/common/esdStructure_test.cpp
+  src/common/MiniDronEngine_test.cpp
+  src/mainExecutonBlock/mainFlyTrybe_test.cpp
+  src/secondMain_test.cpp
+)
