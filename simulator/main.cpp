@@ -78,7 +78,7 @@ int main(){
   Drivers::Memory_Simulator memory("DroneMemoryRegisters.json");
   std::vector<uint8_t> radioData = {0xde, 255, 12, 51, 23, 0x34, 12, 0x55};
   Drivers::RadioSimulator radio(0x46, Drivers::timerCounts, radioData, "/tmp/radioStream");
-  Drivers::RadioParser radioParser(&radio, Drivers::RadioTrybe::Drone);
+  Drivers::RadioParser radioParser(&radio, Drivers::RadioMode::Drone);
   KeyboardInterpreter interpreter(visual, &radioParser);
   Drivers::LED led(gpio, HAL_Delay);
   gpio.pin(OutputList::LED_R, false);

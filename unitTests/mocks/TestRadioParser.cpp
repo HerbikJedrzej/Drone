@@ -3,7 +3,7 @@
 
 namespace TestMocks{
     TestRadioParser::TestRadioParser():
-        RadioParser(&radioMock, Drivers::RadioTrybe::Drone){}
+        RadioParser(&radioMock, Drivers::RadioMode::Drone){}
 
     void TestRadioParser::pushDataToQueue(){
         radioMock.rx.push({
