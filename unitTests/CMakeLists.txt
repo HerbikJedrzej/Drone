@@ -11,7 +11,7 @@ include(src.cmake)
 # define target
 
 add_executable(${name} ${TESTS_SRC})
-target_link_libraries(${name} LINK_PRIVATE ${GTEST_LIBRARIES} CommonCode)
+target_link_libraries(${name} LINK_PRIVATE ${GTEST_LIBRARIES} CommonCode pthread)
 set_property(TARGET ${name} PROPERTY CXX_STANDARD 17)
 
 # Addlocal headers
