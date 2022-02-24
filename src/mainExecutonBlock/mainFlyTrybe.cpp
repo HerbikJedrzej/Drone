@@ -36,8 +36,8 @@ void mainFlyTrybe(GlobalStruct& globals, DriversGroup& driversGroup, void(*)(uin
 		driversGroup.pidY->setY((*driversGroup.ahrs)[1]);
 		driversGroup.pidZ->setY((*driversGroup.ahrs)[2]);
 		driversGroup.pidX->setR(-roundRadioSetValueToDouble(driversGroup.radioParser->getPitchValue(), 6));
-		driversGroup.pidY->setR(-roundRadioSetValueToDouble(driversGroup.radioParser->getRollValue(), 6));
-		mainFlyTrybeSpace::yawlInStady += roundRadioSetValueToDouble(driversGroup.radioParser->getYawlValue(), 100.0);
+		driversGroup.pidY->setR(roundRadioSetValueToDouble(driversGroup.radioParser->getRollValue(), 6));
+		mainFlyTrybeSpace::yawlInStady -= roundRadioSetValueToDouble(driversGroup.radioParser->getYawlValue(), 100.0);
 		driversGroup.pidZ->setR(mainFlyTrybeSpace::yawlInStady);
 		driversGroup.enginesControl->set(globals.power, driversGroup.pidX, driversGroup.pidY, driversGroup.pidZ);
 	}

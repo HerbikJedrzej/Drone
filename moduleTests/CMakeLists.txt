@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10.0)
 set(name moduleTests)
 
 find_package(GTest REQUIRED)
-find_package(PythonLibs 2.7)
+find_package(PythonLibs 3.8)
 
 # Add local sources
 
@@ -29,8 +29,8 @@ set_property(TARGET ${name} PROPERTY CXX_STANDARD 14)
 
 target_compile_options(${name} PRIVATE
   -pthread
-  -I/usr/include/python2.7
-  -lpython2.7
+  -I/usr/include/python3.8
+  -lpython3.8
 )
 
 # Addlocal headers

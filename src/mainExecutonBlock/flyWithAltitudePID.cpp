@@ -31,8 +31,8 @@ void flyWithAltitudePID(GlobalStruct& globals, DriversGroup& driversGroup, void(
 		driversGroup.pidZ->setY((*driversGroup.ahrs)[2]);
 		driversGroup.pidH->setY(globals.altitude);
 		driversGroup.pidX->setR(-roundRadioSetValueToDouble(driversGroup.radioParser->getPitchValue(), 6));
-		driversGroup.pidY->setR(-roundRadioSetValueToDouble(driversGroup.radioParser->getRollValue(), 6));
-		flyWithAltitudePIDSpace::yawl += roundRadioSetValueToDouble(driversGroup.radioParser->getYawlValue(), 100.0);
+		driversGroup.pidY->setR(roundRadioSetValueToDouble(driversGroup.radioParser->getRollValue(), 6));
+		flyWithAltitudePIDSpace::yawl -= roundRadioSetValueToDouble(driversGroup.radioParser->getYawlValue(), 100.0);
 		flyWithAltitudePIDSpace::altitude += roundRadioSetValueToDouble(driversGroup.radioParser->getAltitudeIncremetionValue(), 220.0);
 		driversGroup.pidZ->setR(flyWithAltitudePIDSpace::yawl);
 		driversGroup.pidH->setR(flyWithAltitudePIDSpace::altitude);

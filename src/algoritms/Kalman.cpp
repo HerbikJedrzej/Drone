@@ -147,18 +147,18 @@ void KalmanAHRS::countMatrixA(const double acceleromiterMesurements[3], double r
 	A[0][0] = (acceleretionVectorLengthSquared - acceleromiterMesurements[0] * acceleromiterMesurements[0] ) * g / (acceleretionVectorLengthSquared * acceleretionVectorLength);
 	A[0][1] = (-acceleromiterMesurements[0] * acceleromiterMesurements[1] ) * g / (acceleretionVectorLengthSquared * acceleretionVectorLength);
 	A[0][2] = (-acceleromiterMesurements[0] * acceleromiterMesurements[2] ) * g / (acceleretionVectorLengthSquared * acceleretionVectorLength);
-	A[0][4] = ca * cb * g * dt;
-	A[0][5] = -sa * cb * g * dt;
+	A[0][4] = -ca * cb * g * dt;
+	A[0][5] = sa * cb * g * dt;
 	A[1][0] = (-acceleromiterMesurements[1] * acceleromiterMesurements[0] ) * g / (acceleretionVectorLengthSquared * acceleretionVectorLength);
 	A[1][1] = (acceleretionVectorLengthSquared - acceleromiterMesurements[1] * acceleromiterMesurements[1] ) * g / (acceleretionVectorLengthSquared * acceleretionVectorLength);
 	A[1][2] = (-acceleromiterMesurements[1] * acceleromiterMesurements[2] ) * g / (acceleretionVectorLengthSquared * acceleretionVectorLength);
-	A[1][3] = -ca * cb * g * dt;
-	A[1][5] = -sb * g * dt;
+	A[1][3] = ca * cb * g * dt;
+	A[1][5] = sb * g * dt;
 	A[2][0] = (-acceleromiterMesurements[2] * acceleromiterMesurements[0] ) * g / (acceleretionVectorLengthSquared * acceleretionVectorLength);
 	A[2][1] = (-acceleromiterMesurements[2] * acceleromiterMesurements[1] ) * g / (acceleretionVectorLengthSquared * acceleretionVectorLength);
 	A[2][2] = (acceleretionVectorLengthSquared - acceleromiterMesurements[2] * acceleromiterMesurements[2] ) * g / (acceleretionVectorLengthSquared * acceleretionVectorLength);
-	A[2][3] = sa * cb * g * dt;
-	A[2][4] = sb * g * dt;
+	A[2][3] = -sa * cb * g * dt;
+	A[2][4] = -sb * g * dt;
 }
 
 void KalmanAHRS::countPreditedState()

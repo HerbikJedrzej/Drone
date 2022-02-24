@@ -21,10 +21,10 @@ double ComplementaryFilter::complementaryOneOfThem(const unsigned int witchAngle
 }
 void ComplementaryFilter::run(const double mesuredAkcelerometer[3], const double mesuredGyroskope[3], const double mesuredMegnetometer[3], const double& rollOffset, const double& pitchOffset)
 {
-    filtredAngle[0] = atan2(-mesuredAkcelerometer[1], -mesuredAkcelerometer[2]);
+    filtredAngle[0] = atan2(mesuredAkcelerometer[1], mesuredAkcelerometer[2]);
     filtredAngle[0] = complementaryOneOfThem(0, filtredAngle[0], mesuredGyroskope[0]) + rollOffset;
 
-    filtredAngle[1] = atan2(cos(filtredAngle[0]) * mesuredAkcelerometer[0], -mesuredAkcelerometer[2]);
+    filtredAngle[1] = atan2(-cos(filtredAngle[0]) * mesuredAkcelerometer[0], mesuredAkcelerometer[2]);
     filtredAngle[1] = complementaryOneOfThem(1, filtredAngle[1], mesuredGyroskope[1]) + pitchOffset;
 
     if(mesuredMegnetometer == nullptr){
