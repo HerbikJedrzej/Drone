@@ -11,12 +11,13 @@ include(src.cmake)
 # define target
 
 add_executable(${name} ${TESTS_SRC})
-target_link_libraries(${name} LINK_PRIVATE ${GTEST_LIBRARIES} CommonCode pthread)
+target_link_libraries(${name} LINK_PRIVATE ${GTEST_LIBRARIES} gmock CommonCode pthread)
 set_property(TARGET ${name} PROPERTY CXX_STANDARD 17)
 
 # Addlocal headers
 
 include_directories(${name} PRIVATE ${GTEST_INCLUDE_DIRS})
+include_directories(${name} PRIVATE src/algoritms)
 include_directories(${name} PRIVATE mocks)
 
 # Execute after compile

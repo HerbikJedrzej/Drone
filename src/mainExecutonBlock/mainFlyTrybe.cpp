@@ -23,13 +23,6 @@ void mainFlyTrybe(GlobalStruct& globals, DriversGroup& driversGroup, void(*)(uin
 		mainFlyTrybeSpace::dataToSave[3] = uint8_t(eSumPidY & 0xff);
 		driversGroup.memory->writeDMAwithoutDataAlocate(memoryMap::PID_X_sum_msb, mainFlyTrybeSpace::dataToSave, 4, nullptr);
 	}
-	// if(driversGroup.radioParser->getSpecialButtonOption()){
-	// 	uint8_t tmpP = uint8_t(driversGroup.radioParser->getAltitudeIncremetionValue());
-	// 	driversGroup.memory->write(memoryMap::initEnginePower, &tmpP, 1);
-	// 	mainFlyTrybeSpace::newPower = double(driversGroup.radioParser->getAltitudeIncremetionValue() / 10) + globals.basePower;
-	// }
-	// if(driversGroup.radioParser->getJoyRightButtonOption())
-	// 	globals.basePower = mainFlyTrybeSpace::newPower;
 	globals.power = roundRadioSetValueToDouble(driversGroup.radioParser->getAltitudeIncremetionValue(), 5) + globals.basePower;
 	if(driversGroup.radioParser->getFlyOnOption()){
 		driversGroup.pidX->setY((*driversGroup.ahrs)[0]);

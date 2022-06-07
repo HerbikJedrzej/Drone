@@ -2,7 +2,27 @@
 #include <OwnExceptions.hh>
 #include <memoryMap.hh>
 
+namespace PIDofAxisXandYSpace{
+	uint8_t dataToSave[2];
+}
+
 void mainLoopOfPIDofAxisXandY(GlobalStruct& globals, DriversGroup& driversGroup, const bool& itIsAxisX, void(*)(uint32_t)){
+	if(driversGroup.radioParser->getSpecialButtonOption()){
+		uint16_t memAddr = 0xfffe;
+		int16_t eSumPid = 0;
+		if(itIsAxisX){
+			memAddr = memoryMap::PID_X_sum_msb;
+			globals.sumPidX = driversGroup.pidX->getSum();
+			eSumPid = globals.sumPidX;
+		} else {
+			memAddr = memoryMap::PID_Y_sum_msb;
+			globals.sumPidY = driversGroup.pidY->getSum();
+			eSumPid = globals.sumPidY;
+		}
+		PIDofAxisXandYSpace::dataToSave[0] = uint8_t((eSumPid >> 8) & 0xff);
+		PIDofAxisXandYSpace::dataToSave[1] = uint8_t(eSumPid & 0xff);
+		driversGroup.memory->writeDMAwithoutDataAlocate(memAddr, PIDofAxisXandYSpace::dataToSave, 2, nullptr);
+	}
 	if(driversGroup.radioParser->getFlyOnOption()){
 		if(itIsAxisX){
 			driversGroup.pidX->setY((*driversGroup.ahrs)[0]);

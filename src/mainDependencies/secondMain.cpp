@@ -9,8 +9,18 @@
 #include <memoryMap.hh>
 #include "processRadioData.hh"
 #include <recognizeEngines.hh>
+#include <cstdio>
 
 using Drivers::GPIO;
+
+#define INIT_LOG_BUFFER_MAX_SIZE 140
+#define LOG_PRINT(BUFFOR, FORMAT, ...) {\
+	const int size = sprintf(BUFFOR, FORMAT, ##__VA_ARGS__);\
+	if(size > INIT_LOG_BUFFER_MAX_SIZE) {\
+		THROW_out_of_range("Encrease init log buffer.");\
+	}\
+	driversGroup.transmitUART(BUFFOR, size);\
+}
 
 namespace{
 	uint32_t filerForBattery = {0};
@@ -63,8 +73,8 @@ void mainSetup(Drivers::GPIO*, GlobalStruct& globals, DriversGroup& driversGroup
 		THROW_invalid_argument("AltitudeProvider is not created.");
 	if(!driversGroup.battery)
 		THROW_invalid_argument("Battery observer is not created.");
-	// if(!driversGroup.transmitUART)
-	// 	THROW_invalid_argument("TransmitUART are not created.");
+	if(!driversGroup.measurementManager)
+		THROW_invalid_argument("Measurement manager is not created.");
 	driversGroup.pidX->setLimit(-25.0, 25.0);
 	driversGroup.pidY->setLimit(-25.0, 25.0);
 	driversGroup.pidH->setLimit(-20.0, 30.0);
@@ -133,6 +143,7 @@ void mainSetup(Drivers::GPIO*, GlobalStruct& globals, DriversGroup& driversGroup
 	};
 	if(!driversGroup.memory->init(initMemoryRegisters, sizeof(initMemoryRegisters) / sizeof(initMemoryRegisters[0])))
 		THROW_invalid_argument("Memory initialisation error");
+	driversGroup.measurementManager->init();
 	driversGroup.radio->init();
 	driversGroup.memory->read(memoryMap::mainLoopTrybe, &globals.mainLoopTrybeFlag, 1);
 	uint8_t dataForAngleOffsets[2];
@@ -145,9 +156,34 @@ void mainSetup(Drivers::GPIO*, GlobalStruct& globals, DriversGroup& driversGroup
 	globals.enginesCorrectionX = double(int8_t(dataForInitEngines[1])) / 6;
 	globals.enginesCorrectionY = double(int8_t(dataForInitEngines[2])) / 6;
 	delay(10);
-	char dataToLog[] = "\n\rMain loop is in trybe: x\n\r";
-	dataToLog[25] = '0' + globals.mainLoopTrybeFlag;
-	driversGroup.transmitUART(dataToLog, 28);
+	printInitInfo(globals, driversGroup);
+	if(globals.mainLoopTrybeFlag >= NUMBERS_OF_TRYBES){
+		globals.mainLoopTrybeFlag = 0;
+		driversGroup.memory->writeDMAwithoutDataAlocate(memoryMap::mainLoopTrybe, &globals.mainLoopTrybeFlag, 1, nullptr);
+		THROW_out_of_range("Unknown main loop trybe mode");
+	}
+}
+
+void printInitInfo(GlobalStruct& globals, DriversGroup& driversGroup){
+	char dataToLog[INIT_LOG_BUFFER_MAX_SIZE] = "\n------------- init begin -------------";
+	driversGroup.transmitUART(dataToLog, 40);
+	LOG_PRINT(dataToLog, "\nMain loop is in trybe: %d", globals.mainLoopTrybeFlag);
+	LOG_PRINT(dataToLog, "\nMemory size: %d", driversGroup.memory->getSizeModel() / 0x100 + 1);
+	LOG_PRINT(dataToLog, "\nAvaible memory slots for measurements: %d", driversGroup.measurementManager->slotsNumber);
+	for(uint8_t i = 0; i < driversGroup.measurementManager->slotsNumber; i++)
+		LOG_PRINT(dataToLog, "\nSlot %d size = %.2fs", i + 1, driversGroup.measurementManager->memorySlots[i].getSize()/100.0);
+	LOG_PRINT(dataToLog, "\nAxis X angle offset = %f", globals.angleOffsetAxisX);
+	LOG_PRINT(dataToLog, "\nAxis Y angle offset = %f", globals.angleOffsetAxisY);
+	LOG_PRINT(dataToLog, "\nAxis X PID sum = %f", globals.sumPidX);
+	LOG_PRINT(dataToLog, "\nAxis Y PID sum = %f", globals.sumPidY);
+	LOG_PRINT(dataToLog, "\nAxis X engines correction = %f", globals.enginesCorrectionX);
+	LOG_PRINT(dataToLog, "\nAxis Y engines correction = %f", globals.enginesCorrectionY);
+	LOG_PRINT(dataToLog, "\nPID axis XY factor = %f", globals.PIDcofactor);
+	LOG_PRINT(dataToLog, "\nAxis XY PID. P = %f I = %f D = %f", globals.pidPaxisXY, globals.pidIaxisXY, globals.pidDaxisXY);
+	LOG_PRINT(dataToLog, "\nAxis  Z PID. P = %f I = %f D = %f", globals.pidPaxisZ, globals.pidIaxisZ, globals.pidDaxisZ);
+	if(driversGroup.pidH)
+		LOG_PRINT(dataToLog, "\nAxis  H PID. P = %f I = %f D = %f", globals.pidPaxisH, globals.pidIaxisH, globals.pidDaxisH);
+	LOG_PRINT(dataToLog, "\n------------- init end -------------\n");
 }
 
 void mainLoop(Drivers::GPIO*, GlobalStruct& globals, DriversGroup& driversGroup, void(*delay)(uint32_t)){

@@ -38,6 +38,7 @@ TEST(SecondMain_Test, missingMemory){
         nullptr,    //     Barometer* const barometer;
         nullptr,    //     AltitudeProvider* const altitudeProvider;
         nullptr,    //     BatteryObserver* const battery;
+        nullptr,    //     MeasurementManager* const measurementManager;
         SecondMain_Test::transmitUART
     };
     TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect] = false;
@@ -69,6 +70,7 @@ TEST(SecondMain_Test, missingRadio){
         nullptr,    //     Barometer* const barometer;
         nullptr,    //     AltitudeProvider* const altitudeProvider;
         nullptr,    //     BatteryObserver* const battery;
+        nullptr,    //     MeasurementManager* const measurementManager;
         SecondMain_Test::transmitUART
     };
     TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect] = false;
@@ -102,6 +104,7 @@ TEST(SecondMain_Test, missingRadioParser){
         nullptr,    //     Barometer* const barometer;
         nullptr,    //     AltitudeProvider* const altitudeProvider;
         nullptr,    //     BatteryObserver* const battery;
+        nullptr,    //     MeasurementManager* const measurementManager;
         SecondMain_Test::transmitUART
     };
     TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect] = false;
@@ -135,6 +138,7 @@ TEST(SecondMain_Test, missingDOF10Sensor){
         nullptr,    //     Barometer* const barometer;
         nullptr,    //     AltitudeProvider* const altitudeProvider;
         nullptr,    //     BatteryObserver* const battery;
+        nullptr,    //     MeasurementManager* const measurementManager;
         SecondMain_Test::transmitUART
     };
     TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect] = false;
@@ -169,6 +173,7 @@ TEST(SecondMain_Test, missingEngines){
         nullptr,    //     Barometer* const barometer;
         nullptr,    //     AltitudeProvider* const altitudeProvider;
         nullptr,    //     BatteryObserver* const battery;
+        nullptr,    //     MeasurementManager* const measurementManager;
         SecondMain_Test::transmitUART
     };
     TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect] = false;
@@ -205,6 +210,7 @@ TEST(SecondMain_Test, missingAHRS){
         nullptr,    //     Barometer* const barometer;
         nullptr,    //     AltitudeProvider* const altitudeProvider;
         nullptr,    //     BatteryObserver* const battery;
+        nullptr,    //     MeasurementManager* const measurementManager;
         SecondMain_Test::transmitUART
     };
     TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect] = false;
@@ -243,6 +249,7 @@ TEST(SecondMain_Test, missingPIDforX){
         nullptr,    //     Barometer* const barometer;
         nullptr,    //     AltitudeProvider* const altitudeProvider;
         nullptr,    //     BatteryObserver* const battery;
+        nullptr,    //     MeasurementManager* const measurementManager;
         SecondMain_Test::transmitUART
     };
     TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect] = false;
@@ -282,6 +289,7 @@ TEST(SecondMain_Test, missingPIDforY){
         nullptr,    //     Barometer* const barometer;
         nullptr,    //     AltitudeProvider* const altitudeProvider;
         nullptr,    //     BatteryObserver* const battery;
+        nullptr,    //     MeasurementManager* const measurementManager;
         SecondMain_Test::transmitUART
     };
     TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect] = false;
@@ -322,6 +330,7 @@ TEST(SecondMain_Test, missingPIDforZ){
         nullptr,    //     Barometer* const barometer;
         nullptr,    //     AltitudeProvider* const altitudeProvider;
         nullptr,    //     BatteryObserver* const battery;
+        nullptr,    //     MeasurementManager* const measurementManager;
         SecondMain_Test::transmitUART
     };
     TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect] = false;
@@ -343,7 +352,7 @@ TEST(SecondMain_Test, missingPIDforH){
     TestMocks::TestIMU imu;
     double imuData[3];
     AHRS ahrs(imuData, imuData, nullptr);
-    AltitudeProvider altitudeProvider(0.1);
+    AltitudeProvider altitudeProvider(nullptr, 0.1);
     TestMocks::TestMemory memory;
     PID pidX;
     PID pidY;
@@ -363,6 +372,7 @@ TEST(SecondMain_Test, missingPIDforH){
         nullptr,    //     Barometer* const barometer;
         nullptr,    //     AltitudeProvider* const altitudeProvider;
         nullptr,    //     BatteryObserver* const battery;
+        nullptr,    //     MeasurementManager* const measurementManager;
         SecondMain_Test::transmitUART
     };
     TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect] = false;
@@ -404,6 +414,7 @@ TEST(SecondMain_Test, missingAltitudeProvider){
         nullptr,    //     Barometer* const barometer;
         nullptr,    //     AltitudeProvider* const altitudeProvider;
         nullptr,    //     BatteryObserver* const battery;
+        nullptr,    //     MeasurementManager* const measurementManager;
         SecondMain_Test::transmitUART
     };
     TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect] = false;
@@ -425,7 +436,7 @@ TEST(SecondMain_Test, missingBatteryObserver){
     TestMocks::TestIMU imu;
     double imuData[3];
     AHRS ahrs(imuData, imuData, nullptr);
-    AltitudeProvider altitudeProvider(0.1);
+    AltitudeProvider altitudeProvider(nullptr, 0.1);
     TestMocks::TestMemory memory;
     PID pidX;
     PID pidY;
@@ -446,6 +457,7 @@ TEST(SecondMain_Test, missingBatteryObserver){
         nullptr,    //     Barometer* const barometer;
         &altitudeProvider,    //     AltitudeProvider* const altitudeProvider;
         nullptr,    //     BatteryObserver* const battery;
+        nullptr,    //     MeasurementManager* const measurementManager;
         SecondMain_Test::transmitUART
     };
     TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect] = false;
@@ -458,7 +470,7 @@ TEST(SecondMain_Test, missingBatteryObserver){
     EXPECT_TRUE(TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect]);
 }
 
-TEST(SecondMain_Test, initPASS){
+TEST(SecondMain_Test, missingMeasurementManager){
     GlobalStruct globals{0, 0, 0};
     TestMocks::TestRadio radio;
     TestMocks::TestRadioParser radioParser;
@@ -467,7 +479,7 @@ TEST(SecondMain_Test, initPASS){
     TestMocks::TestIMU imu;
     double imuData[3];
     AHRS ahrs(imuData, imuData, nullptr);
-    AltitudeProvider altitudeProvider(0.1);
+    AltitudeProvider altitudeProvider(nullptr, 0.1);
     TestMocks::TestMemory memory;
     PID pidX;
     PID pidY;
@@ -483,6 +495,52 @@ TEST(SecondMain_Test, initPASS){
         &memory.memory,    //     Drivers::Memory* const memory;
         &enginesControl,    //     EngineIfc* const enines;
         &ahrs,    //     AHRS* const ahrs;
+        &pidX,    //     PID* const pid;
+        &pidY,    //     PID* const pid;
+        &pidZ,    //     PID* const pidZ;
+        &pidH,    //     PID* const pidH;
+        nullptr,    //     Barometer* const barometer;
+        &altitudeProvider,    //     AltitudeProvider* const altitudeProvider;
+        &battery,    //     BatteryObserver* const battery;
+        nullptr,    //     MeasurementManager* const measurementManager;
+        SecondMain_Test::transmitUART
+    };
+    TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect] = false;
+    try{
+        mainSetup(&TestMocks::gpio, globals, drivers, TestMocks::delay);
+        EXPECT_TRUE(false);
+    }catch(const std::invalid_argument& e){
+        EXPECT_STREQ("Measurement manager is not created.", e.what());
+    }
+    EXPECT_TRUE(TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect]);
+}
+
+TEST(SecondMain_Test, initPASS){
+    GlobalStruct globals{0, 0, 0};
+    TestMocks::TestRadio radio;
+    TestMocks::TestRadioParser radioParser;
+    TestMocks::TestEngine engines(4);
+    QuatroEngineControl enginesControl(&engines);
+    TestMocks::TestIMU imu;
+    double imuData[3];
+    AHRS ahrs(imuData, imuData, nullptr);
+    AltitudeProvider altitudeProvider(nullptr, 0.1);
+    TestMocks::TestMemory memory;
+    PID pidX;
+    PID pidY;
+    PID pidZ;
+    PID pidH;
+    double rezistors[3] = {10000, 22000, 47000};
+    TestMocks::TestBatteryObserver battery(rezistors, 3, 2.0, 3.7);
+    MeasurementManager measurementManager(&memory.memory, nullptr, 0);
+    DriversGroup drivers{
+        SecondMain_Test::TestLed,
+        &radio,    //     Drivers::RadioIfc* const radio;
+        &radioParser,    //     Drivers::RadioParser* const radioParser;
+        &imu,    //     Drivers::IMUsensorIfc* const dof10sensors;
+        &memory.memory,    //     Drivers::Memory* const memory;
+        &enginesControl,    //     EngineIfc* const enines;
+        &ahrs,    //     AHRS* const ahrs;
         &pidX,    //     PID* const pidX;
         &pidY,    //     PID* const pidY;
         &pidZ,    //     PID* const pidZ;
@@ -490,6 +548,7 @@ TEST(SecondMain_Test, initPASS){
         nullptr,    //     Barometer* const barometer;
         &altitudeProvider,    //     AltitudeProvider* const altitudeProvider;
         &battery,    //     BatteryObserver* const battery;
+        &measurementManager,    //     MeasurementManager* const measurementManager;
         SecondMain_Test::transmitUART
     };
     TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect] = false;
@@ -530,15 +589,18 @@ TEST(SecondMain_Test, initPASS){
 	memoryRegs[memoryMap::PID_Z_sum_lsb] = 0;
 	memoryRegs[memoryMap::PID_H_sum_msb] = 0;
 	memoryRegs[memoryMap::PID_H_sum_lsb] = 0;
+	memoryRegs[0xFFFF] = 0;
     TestMocks::sleepedTime = 0;
     try{
         mainSetup(&TestMocks::gpio, globals, drivers, TestMocks::delay);
     }catch(const std::invalid_argument& e){
         EXPECT_STREQ("", e.what());
+    }catch(const std::out_of_range& e){
+        EXPECT_STREQ("", e.what());
     }catch(...){
         EXPECT_TRUE(false);
     }
-    EXPECT_EQ(TestMocks::sleepedTime, 124);
+    EXPECT_EQ(TestMocks::sleepedTime, 126);
     EXPECT_FALSE(TestMocks::TestGPIO::outputs[OutputList::MemoryWriteProtect]);
 }
 

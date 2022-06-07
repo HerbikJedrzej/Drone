@@ -5,6 +5,7 @@ PID::PID():
     I(0),
     D(0),
     AntiWindup(0),
+    outputFactor(1.0),
     r(0),
     u(0),
     e(0),
@@ -39,7 +40,7 @@ double PID::calculate()
     e = r - y;
     eSum += e + AntiWindup * antiWindupCorrection;
     const double eDelta = (e - ePast);
-    toReturn = P * e + I * eSum + D * eDelta;
+    toReturn = outputFactor * (P * e + I * eSum + D * eDelta);
     if(maxOut > minOut){
         const double beforeLimiting = toReturn;
         max(toReturn, maxOut);

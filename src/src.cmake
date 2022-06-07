@@ -27,6 +27,7 @@ list(APPEND LOCAL_SOURCE_PATHS
   common/BatteryObserver.cpp
   common/esdStructure.cpp
   common/MiniDronEngine.cpp
+  common/MeasurementManager.cpp
   mainExecutonBlock/EnginePercentValue.cpp
   mainExecutonBlock/FlyTrybeWithAltitude.cpp
   mainExecutonBlock/flyWithAltitudePID.cpp

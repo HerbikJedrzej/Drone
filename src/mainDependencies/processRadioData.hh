@@ -12,10 +12,7 @@ public:
 	static void procesMeasurements(GlobalStruct& globals, DriversGroup& driversGroup);
 	static void processRadioMainData(GlobalStruct& globals, DriversGroup& driversGroup);
 protected:
-	static uint8_t bytesWriteToMemoryInOneLoop;
-	static memoryMap endAddrToSave;
-	static uint16_t measurementSize;
-	static void recordMeasurements(GlobalStruct& globals, DriversGroup& driversGroup, const uint8_t& bytes);
+	static void recordMeasurements(GlobalStruct& globals, DriversGroup& driversGroup);
 	static void sendMeasuredData(DriversGroup& driversGroup);
 	static void applyPIDparams(GlobalStruct& globals, DriversGroup& driversGroup);
 	static void setRegisterInMap(DriversGroup& driversGroup, const memoryMap& addr);

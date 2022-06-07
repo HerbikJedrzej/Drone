@@ -3,37 +3,23 @@
 
 #define M_PI 3.14159265358979323846 // pi
 
-uint8_t ProcessRadioData::bytesWriteToMemoryInOneLoop = {2};
-uint16_t ProcessRadioData::measurementSize = {0};
-memoryMap ProcessRadioData::endAddrToSave = {slot1_measuredData1MSB};
-
-void ProcessRadioData::recordMeasurements(GlobalStruct& globals, DriversGroup& driversGroup, const uint8_t& bytes){
+void ProcessRadioData::recordMeasurements(GlobalStruct& globals, DriversGroup& driversGroup){
 	uint8_t data[2];
-	bytesWriteToMemoryInOneLoop = bytes;
-	switch(driversGroup.radioParser->getMainOptionValue()){
+	const uint8_t option = driversGroup.radioParser->getMainOptionValue();
+	switch(option){
 		case 1:
-			endAddrToSave = memoryMap::slot1_measuredData500LSB;
-			measurementSize = memoryMap::slot1_measuredData500LSB - memoryMap::slot1_measuredData1MSB;
 			driversGroup.memory->read(memoryMap::slot1_sinusSignalParam1, data, 2);
 			break;
 		case 2:
-			endAddrToSave = memoryMap::slot2_measuredData500LSB;
-			measurementSize = memoryMap::slot2_measuredData500LSB - memoryMap::slot2_measuredData1MSB;
 			driversGroup.memory->read(memoryMap::slot2_sinusSignalParam1, data, 2);
 			break;
 		case 3:
-			endAddrToSave = memoryMap::slot3_measuredData500LSB;
-			measurementSize = memoryMap::slot3_measuredData500LSB - memoryMap::slot3_measuredData1MSB;
 			driversGroup.memory->read(memoryMap::slot3_sinusSignalParam1, data, 2);
 			break;
 		case 4:
-			endAddrToSave = memoryMap::slot4_measuredData1000LSB;
-			measurementSize = memoryMap::slot4_measuredData1000LSB - memoryMap::slot4_measuredData1MSB;
 			driversGroup.memory->read(memoryMap::slot4_sinusSignalParam1, data, 2);
 			break;
 		case 5:
-			endAddrToSave = memoryMap::slot5_measuredData1000LSB;
-			measurementSize = memoryMap::slot5_measuredData1000LSB - memoryMap::slot5_measuredData1MSB;
 			driversGroup.memory->read(memoryMap::slot5_sinusSignalParam1, data, 2);
 			break;
 		default:
@@ -42,58 +28,46 @@ void ProcessRadioData::recordMeasurements(GlobalStruct& globals, DriversGroup& d
 	globals.measuredSignalParam1 = double(data[0]) / 8 + 0.25;
 	globals.measuredSignalParam2 = double(data[1]) * 9.9 / 255 + 0.1;
 	globals.measureTime = 0;
+	driversGroup.measurementManager->startMeasurement(option - 1);
 }
 
 void ProcessRadioData::procesMeasurements(GlobalStruct& globals, DriversGroup& driversGroup){
-	if(measurementSize == 0){
-		globals.measuredSignal = 0;
-		return;
-	}
 	globals.measureTime += 0.01;
-	uint8_t dataToWrite[4] = {
-		uint8_t((globals.measuredVal1 >> 8) & 0xff), uint8_t(globals.measuredVal1 & 0xff),
-		uint8_t((globals.measuredVal2 >> 8) & 0xff), uint8_t(globals.measuredVal2 & 0xff),
-	};
-	driversGroup.memory->write(endAddrToSave - measurementSize, dataToWrite, bytesWriteToMemoryInOneLoop);
-	if(measurementSize < bytesWriteToMemoryInOneLoop)
-		measurementSize = 0;
-	else
-		measurementSize -= bytesWriteToMemoryInOneLoop;
+	driversGroup.measurementManager->increment();
 }
 
 void ProcessRadioData::sendMeasuredData(DriversGroup& driversGroup){
-	memoryMap begin = memoryMap::slot1_sinusSignalParam1;
-	memoryMap end = memoryMap::slot1_measuredData500LSB;
+	memoryMap begin = memoryMap::slot1_begin;
+	memoryMap end = memoryMap::slot1_end;
+	const uint8_t option = driversGroup.radioParser->getMainOptionValue();
 	uint8_t data;
+	char dataUartInfo[8] = {'S', 'l', 'o', 't', ':', ' ', char('0' + option), '\n'};
 	char dataUart[3] = {'0', '0', '\n'};
-	switch(driversGroup.radioParser->getMainOptionValue()){
+	switch(option){
 		case 1:
-			begin = memoryMap::slot1_sinusSignalParam1;
-			end = memoryMap::slot1_measuredData500LSB;
+			begin = memoryMap::slot1_begin;
+			end = memoryMap::slot1_end;
 			break;
 		case 2:
-			begin = memoryMap::slot2_sinusSignalParam1;
-			end = memoryMap::slot2_measuredData500LSB;
+			begin = memoryMap::slot2_begin;
+			end = memoryMap::slot2_end;
 			break;
 		case 3:
-			begin = memoryMap::slot3_sinusSignalParam1;
-			end = memoryMap::slot3_measuredData500LSB;
+			begin = memoryMap::slot3_begin;
+			end = memoryMap::slot3_end;
 			break;
 		case 4:
-			begin = memoryMap::slot4_sinusSignalParam1;
-			end = memoryMap::slot4_measuredData1000LSB;
+			begin = memoryMap::slot4_begin;
+			end = memoryMap::slot4_end;
 			break;
 		case 5:
-			begin = memoryMap::slot5_sinusSignalParam1;
-			end = memoryMap::slot5_measuredData1000LSB;
+			begin = memoryMap::slot5_begin;
+			end = memoryMap::slot5_end;
 			break;
 		default:
 			THROW_invalid_argument("There are olny slots [1...5] to read measure.");
 	}
-	driversGroup.memory->read(memoryMap::initEnginePower, &data, 1);
-	dataUart[0] = '0' + ((data >> 4) & 0x0f);
-	dataUart[1] = '0' + (data & 0x0f);
-	if(!driversGroup.transmitUART(dataUart, 3))
+	if(!driversGroup.transmitUART(dataUartInfo, 8))
 		THROW_invalid_argument("Sending data finished with failure.");
 	for(uint32_t addr = begin; addr <= end; addr++){
 		driversGroup.memory->read(addr, &data, 1);
@@ -138,7 +112,7 @@ void ProcessRadioData::processRadioMainData(GlobalStruct& globals, DriversGroup&
 			driversGroup.memory->writeDMAwithoutDataAlocate(memoryMap::mainLoopTrybe, &globals.mainLoopTrybeFlag, 1, nullptr);
 			return;
 		case 2:
-			recordMeasurements(globals, driversGroup, 2);
+			recordMeasurements(globals, driversGroup);
 			return;
 		case 3:
 			sendMeasuredData(driversGroup);
@@ -274,7 +248,7 @@ void ProcessRadioData::processRadioMainData(GlobalStruct& globals, DriversGroup&
 			globals.percentValueOfEngine = double(uint8_t(driversGroup.radioParser->getMainOptionValue())) / 2.55;
 			return;
 		case 31:
-			recordMeasurements(globals, driversGroup, 4);
+			recordMeasurements(globals, driversGroup);
 			return;
 		default:
 			THROW_invalid_argument("This value of main option number is not supported.");

@@ -296,6 +296,14 @@ void Data::_input(const double value){
     counter++;
 }
 
+void Offset::_input(const double) {
+    y = model->output() - offset;
+}
+
+Offset::Offset(Model* _model, const double& _offset):
+    Model(_model, 1),
+    offset(_offset){}
+
 std::pair<std::vector<double>, std::vector<double>> simulate(models::Model* const model, const double startTime, const double endTime){
     if(!model)
         throw std::system_error();

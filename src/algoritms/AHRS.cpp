@@ -11,7 +11,10 @@ AHRS::AHRS(double* _akceletometer, double* _gyroskope, double* _magnetometer, co
     complementaryFilter(),
     kalmanFilter(),
     sinAngleZ(sin(rotationZ * M_PI / 180.0)),
-    cosAngleZ(cos(rotationZ * M_PI / 180.0))
+    cosAngleZ(cos(rotationZ * M_PI / 180.0)),
+    horizontalFactor(1.0),
+    horizontalAkceleration(0),
+    horizontalAkcelerationVariation(0)
     {
         complementaryFilter.changeA(0.01);
     }
@@ -46,11 +49,16 @@ void AHRS::run(const double& rollDegOffset, const double& pitchDegOffset){
     const double cr = cos(complementaryFilter[0]);
     const double sp = sin(complementaryFilter[1]);
     const double cp = cos(complementaryFilter[1]);
-    horizontalAkceleration = (-sp * stepingFilter[0] + sr * cp * stepingFilter[1] + cr * cp * stepingFilter[2]);
+    horizontalFactor = cr * cp;
+    horizontalAkceleration = (-sp * stepingFilter[0] + sr * cp * stepingFilter[1] + horizontalFactor * stepingFilter[2]);
     horizontalAkcelerationVariation =
         sp * sp *           variance[0] +
         sr * cp * sr * cp * variance[1] +
-        cr * cp * cr * cp * variance[2];
+        horizontalFactor * horizontalFactor * variance[2];
+}
+
+double AHRS::getHorizontalFactor(){
+    return horizontalFactor;
 }
 
 double AHRS::getHorizontalAkceleration(){

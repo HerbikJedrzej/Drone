@@ -17,6 +17,7 @@
 #include <BatteryObserver.hh>
 #include <AltitudeProvider.hh>
 #include <BarometerIfc.hh>
+#include <MeasurementManager.hh>
 
 struct Barometer{
     int16_t AC1;
@@ -47,6 +48,7 @@ struct  DriversGroup{
     Drivers::BarometerIfc* const barometer;
     AltitudeProvider* const altitudeProvider;
     BatteryObserver* battery;
+    MeasurementManager* measurementManager;
     bool (*transmitUART)(const char* text, unsigned int size);
 };
 
@@ -66,12 +68,9 @@ struct GlobalStruct{
     double pidPaxisH = 1;
     double pidIaxisH = 0;
     double pidDaxisH = 0;
-	double measuredSignal = 0;
     double measureTime = 0;
     uint16_t measuredSignalParam1 = 0;
     uint16_t measuredSignalParam2 = 0;
-    uint16_t measuredVal1 = 0;
-    uint16_t measuredVal2 = 0;
     double angleOffsetAxisX = 0;
     double angleOffsetAxisY = 0;
 	double percentValueOfEngine = 0;

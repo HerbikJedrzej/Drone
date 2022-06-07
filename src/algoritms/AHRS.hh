@@ -9,6 +9,7 @@ public:
     AHRS(double* _akceletometer, double* _gyroskope, double* _magnetometer, const double rotationZ = 0);
     double operator[](unsigned int i);
     void run(const double& rollDegOffset = 0.0, const double& pitchDegOffset = 0.0);
+    double getHorizontalFactor();
     double getHorizontalAkceleration();
     double getHorizontalAkcelerationVariation();
 protected:
@@ -20,6 +21,7 @@ protected:
     KalmanAHRS kalmanFilter;
     const double sinAngleZ;
     const double cosAngleZ;
+    double horizontalFactor;
     double horizontalAkceleration;
     double horizontalAkcelerationVariation;
 };

@@ -20,6 +20,7 @@ list(APPEND TESTS_SRC
   src/common/BatteryObserver_test.cpp
   src/common/esdStructure_test.cpp
   src/common/MiniDronEngine_test.cpp
+  src/common/MeasurementManager_test.cpp
   src/mainExecutonBlock/mainFlyTrybe_test.cpp
   src/secondMain_test.cpp
 )

@@ -68,41 +68,29 @@ enum memoryMap{
 		PID_H_sum_lsb = 0x0049,
 	// END PID sum 0x0049
 
-	// BEGIN measurements for matlab drone model. 0xE49E
-	// SLOT 1
-		slot1_sinusSignalParam1 = 0x0300,
+	// BEGIN measurements parameters 0x004A
+		slot1_sinusSignalParam1 = 0x004A,
 		slot1_sinusSignalParam2,
-		slot1_measuredData1MSB = 0x0302,
-		slot1_measuredData1LSB,
-		slot1_measuredData500MSB = 0x06E8,
-		slot1_measuredData500LSB,
-	// SLOT 2
-		slot2_sinusSignalParam1 = 0x06EA,
+		slot2_sinusSignalParam1,
 		slot2_sinusSignalParam2,
-		slot2_measuredData1MSB = 0x06EC,
-		slot2_measuredData1LSB,
-		slot2_measuredData500MSB = 0x0AD2,
-		slot2_measuredData500LSB,
-	// SLOT 3
-		slot3_sinusSignalParam1 = 0x0AD4,
+		slot3_sinusSignalParam1,
 		slot3_sinusSignalParam2,
-		slot3_measuredData1MSB = 0x0AD6,
-		slot3_measuredData1LSB,
-		slot3_measuredData500MSB = 0x0EBC,
-		slot3_measuredData500LSB,
-	// SLOT 4
-		slot4_sinusSignalParam1 = 0x0EBE,
+		slot4_sinusSignalParam1,
 		slot4_sinusSignalParam2,
-		slot4_measuredData1MSB = 0x0EC0,
-		slot4_measuredData1LSB,
-		slot4_measuredData1000MSB = 0x168E,
-		slot4_measuredData1000LSB,
-	// SLOT 5
-		slot5_sinusSignalParam1 = 0x1690,
-		slot5_sinusSignalParam2,
-		slot5_measuredData1MSB = 0x1692,
-		slot5_measuredData1LSB,
-		slot5_measuredData1000MSB = 0x1E60,
-		slot5_measuredData1000LSB,
-	// END measurements for matlab drone model. Slot 5. 0xFFFF
+		slot5_sinusSignalParam1,
+		slot5_sinusSignalParam2 = 0x0053,
+	// END measurements parameters 0x0053
+
+	// BEGIN measurements
+		slot1_begin = 0x0200,
+		slot1_end   = 0x213F,
+		slot2_begin,
+		slot2_end   = 0x407F,
+		slot3_begin,
+		slot3_end   = 0x7EFF,
+		slot4_begin,
+		slot4_end   = 0xBD7F,
+		slot5_begin,
+		slot5_end   = 0xFBFF,
+	// END measurements
 };

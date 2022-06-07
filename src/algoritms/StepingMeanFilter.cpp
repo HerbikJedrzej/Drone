@@ -26,7 +26,7 @@ const double* StepingMeanFilter::getVariance(){
             double tmp = mean - memory[i][j];
             result += tmp * tmp;
         }
-        variance[i] = result / (STRENGTH_OF_STEPING_MEAN - 1);
+        variance[i] = result / (STRENGTH_OF_STEPING_MEAN);
     }
     return variance;
 }

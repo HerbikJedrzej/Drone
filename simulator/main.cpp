@@ -46,6 +46,30 @@ void timerMainLoop(bool* exit, bool* mainLoop){
 namespace {
   void HAL_Delay(uint32_t){}
   std::vector<bool> leds(LED_LAST_LED, true);
+
+  class BarometerMock : public Drivers::BarometerIfc{
+      void handleTimeEvent(DriverIfc*) override {}
+      void handleFinish(DriverIfc*) override {}
+      bool mockFlag;
+  public:
+      BarometerMock():BarometerIfc(mockFlag, [](uint32_t)->void{}){}
+      virtual bool init() override {return false;}
+      
+      double preasure;
+      double temperature;
+      double altitude;
+      double altitudeVariance;
+
+      double getPreasure() override {
+          return preasure;
+      }
+      double getTemperature() override {
+          return temperature;
+      }
+      double getAltitude() override {
+          return altitude;
+      }
+  };
 }
 
 int main(){
@@ -76,6 +100,15 @@ int main(){
   DroneVisualisation visual;
   std::thread timer(Drivers::timerMainLoop, &exit, &doCircle);
   Drivers::Memory_Simulator memory("DroneMemoryRegisters.json");
+  constexpr uint8_t memoryMeasurementsSlotsNumber = 5;
+  MeasurementManager::MemorySlot memoryMeasurementsSlots[memoryMeasurementsSlotsNumber] = {
+    MeasurementManager::MemorySlot(memoryMap::slot1_begin, memoryMap::slot1_end),
+    MeasurementManager::MemorySlot(memoryMap::slot2_begin, memoryMap::slot2_end),
+    MeasurementManager::MemorySlot(memoryMap::slot3_begin, memoryMap::slot3_end),
+    MeasurementManager::MemorySlot(memoryMap::slot4_begin, memoryMap::slot4_end),
+    MeasurementManager::MemorySlot(memoryMap::slot5_begin, memoryMap::slot5_end),
+  };
+  MeasurementManager measurementManager(&memory, memoryMeasurementsSlots, memoryMeasurementsSlotsNumber);
   std::vector<uint8_t> radioData = {0xde, 255, 12, 51, 23, 0x34, 12, 0x55};
   Drivers::RadioSimulator radio(0x46, Drivers::timerCounts, radioData, "/tmp/radioStream");
   Drivers::RadioParser radioParser(&radio, Drivers::RadioMode::Drone);
@@ -101,8 +134,9 @@ int main(){
   PID pidY;
   PID pidZ;
   PID pidH;
+  BarometerMock barometer;
   AHRS ahrs(imu.akcelerometr, imu.gyroskope, nullptr);
-  AltitudeProvider altitudeProvider(0.1);
+  AltitudeProvider altitudeProvider(&barometer, 0.1);
   MiniDronEngine engines(enginesPower, 4);
   QuatroEngineControl engineControl(&engines);
   srand( time( NULL ) );
@@ -122,6 +156,7 @@ int main(){
     nullptr,
     &altitudeProvider,
     &battery,
+    &measurementManager,
     [](const char*, unsigned int){
       return true;
     }
@@ -136,7 +171,7 @@ int main(){
       led.handleTimeEvent(nullptr);
       radio.handleTimeEvent(nullptr);
       radioParser.run();
-      altitudeProvider.run(0.0, 0.0, 0.0);
+      altitudeProvider.run();
       mainLoop(&gpio, globalStruct, driversGroup, HAL_Delay);
       visual.printEngines(enginesPower);
       visual.printCycleNumber(Drivers::timerCounts);

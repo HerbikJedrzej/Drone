@@ -4,15 +4,17 @@
 #include <EngineIfc.hh>
 #include <cstdlib>
 
-class EnginesFotTest : public EngineIfc{
+class EnginesForTest : public EngineIfc{
 	uint16_t* values;
 	static constexpr uint16_t max = {2500};
 public:
-	EnginesFotTest(const uint8_t size):
-		EngineIfc(size, values),
-		values(new uint16_t[size]){}
+	EnginesForTest(const uint8_t size):
+		EngineIfc(size, nullptr),
+		values(new uint16_t[size]{}){
+			listOfEngineRegisters = values;
+		}
 
-	~EnginesFotTest(){
+	~EnginesForTest(){
 		delete [] values;
 	}
     void init() override{
@@ -32,7 +34,7 @@ public:
 };
 
 TEST(EngineControlIfc, setAll){
-	EnginesFotTest engines(4);
+	EnginesForTest engines(4);
 	QuatroEngineControl controlerInstance(&engines);
 	EngineControlIfc* controler = &controlerInstance;
 	engines.init();
@@ -63,7 +65,7 @@ TEST(EngineControlIfc, setAll){
 }
 
 TEST(EngineControlIfc, incrementEngine){
-	EnginesFotTest engines(4);
+	EnginesForTest engines(4);
 	QuatroEngineControl controlerInstance(&engines);
 	EngineControlIfc* controler = &controlerInstance;
 	engines.init();
@@ -104,7 +106,7 @@ TEST(EngineControlIfc, incrementEngine){
 }
 
 TEST(QuatroEngineControl, tooLessEngines){
-	EnginesFotTest engines(3);
+	EnginesForTest engines(3);
 	try{
 		QuatroEngineControl controler(&engines);
 	}catch(std::invalid_argument& e){
@@ -115,7 +117,7 @@ TEST(QuatroEngineControl, tooLessEngines){
 }
 
 TEST(QuatroEngineControl, tooMuchEngines){
-	EnginesFotTest engines(5);
+	EnginesForTest engines(5);
 	try{
 		QuatroEngineControl controler(&engines);
 	}catch(std::invalid_argument& e){
@@ -126,7 +128,7 @@ TEST(QuatroEngineControl, tooMuchEngines){
 }
 
 TEST(QuatroEngineControl, setX){
-	EnginesFotTest engines(4);
+	EnginesForTest engines(4);
 	QuatroEngineControl controlerInstance(&engines);
 	EngineControlIfc* controler = &controlerInstance;
 	PID pid;
@@ -155,7 +157,7 @@ TEST(QuatroEngineControl, setX){
 }
 
 TEST(QuatroEngineControl, setY){
-	EnginesFotTest engines(4);
+	EnginesForTest engines(4);
 	QuatroEngineControl controlerInstance(&engines);
 	EngineControlIfc* controler = &controlerInstance;
 	PID pid;
@@ -184,7 +186,7 @@ TEST(QuatroEngineControl, setY){
 }
 
 TEST(QuatroEngineControl, setZ){
-	EnginesFotTest engines(4);
+	EnginesForTest engines(4);
 	QuatroEngineControl controlerInstance(&engines);
 	EngineControlIfc* controler = &controlerInstance;
 	PID pid;
@@ -213,7 +215,7 @@ TEST(QuatroEngineControl, setZ){
 }
 
 TEST(QuatroEngineControl, set){
-	EnginesFotTest engines(4);
+	EnginesForTest engines(4);
 	QuatroEngineControl controlerInstance(&engines);
 	EngineControlIfc* controler = &controlerInstance;
 	PID pidX;
@@ -258,7 +260,7 @@ TEST(QuatroEngineControl, set){
 }
 
 TEST(OctoEngineControl, tooLessEngines){
-	EnginesFotTest engines(4);
+	EnginesForTest engines(4);
 	try{
 		OctoEngineControl controler(&engines);
 	}catch(std::invalid_argument& e){
@@ -269,7 +271,7 @@ TEST(OctoEngineControl, tooLessEngines){
 }
 
 TEST(OctoEngineControl, tooMuchEngines){
-	EnginesFotTest engines(9);
+	EnginesForTest engines(9);
 	try{
 		OctoEngineControl controler(&engines);
 	}catch(std::invalid_argument& e){
@@ -280,7 +282,7 @@ TEST(OctoEngineControl, tooMuchEngines){
 }
 
 TEST(OctoEngineControl, setX){
-	EnginesFotTest engines(8);
+	EnginesForTest engines(8);
 	OctoEngineControl controlerInstance(&engines);
 	EngineControlIfc* controler = &controlerInstance;
 	PID pid;
@@ -321,7 +323,7 @@ TEST(OctoEngineControl, setX){
 }
 
 TEST(OctoEngineControl, setY){
-	EnginesFotTest engines(8);
+	EnginesForTest engines(8);
 	OctoEngineControl controlerInstance(&engines);
 	EngineControlIfc* controler = &controlerInstance;
 	PID pid;
@@ -362,7 +364,7 @@ TEST(OctoEngineControl, setY){
 }
 
 TEST(OctoEngineControl, setZ){
-	EnginesFotTest engines(8);
+	EnginesForTest engines(8);
 	OctoEngineControl controlerInstance(&engines);
 	EngineControlIfc* controler = &controlerInstance;
 	PID pid;
@@ -403,7 +405,7 @@ TEST(OctoEngineControl, setZ){
 }
 
 TEST(OctoEngineControl, set){
-	EnginesFotTest engines(8);
+	EnginesForTest engines(8);
 	OctoEngineControl controlerInstance(&engines);
 	EngineControlIfc* controler = &controlerInstance;
 	PID pidX;

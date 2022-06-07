@@ -21,7 +21,7 @@ Matrix<x,y> multiplication(const Matrix<x,n>& m1, const Matrix<n,y>& m2){
         for(unsigned int _y = 0; _y < y; _y++)
             for(unsigned int _n = 0; _n < n; _n++)
                 toReturn(_x, _y) += m1.get(_x, _n) * m2.get(_n, _y);
-    return std::move(toReturn);
+    return toReturn;
 }
 
 template<unsigned int x, unsigned int y>
@@ -30,7 +30,7 @@ Matrix<x,y> transformation(const Matrix<y,x>& m){
     for(unsigned int _x = 0; _x < x; _x++)
         for(unsigned int _y = 0; _y < y; _y++)
             toReturn(_x, _y) += m.get(_y, _x);
-    return std::move(toReturn);
+    return toReturn;
 }
 
 template<unsigned int x, unsigned int y>
@@ -39,7 +39,7 @@ Matrix<x,y> addition(const Matrix<x,y>& m1, const Matrix<x,y>& m2){
     for(unsigned int _x = 0; _x < x; _x++)
         for(unsigned int _y = 0; _y < y; _y++)
             toReturn(_x, _y) += m1.get(_x, _y) + m2.get(_x, _y);
-    return std::move(toReturn);
+    return toReturn;
 }
 
 template<unsigned int x, unsigned int y>
@@ -48,7 +48,7 @@ Matrix<x,y> subtraction(const Matrix<x,y>& m1, const Matrix<x,y>& m2){
     for(unsigned int _x = 0; _x < x; _x++)
         for(unsigned int _y = 0; _y < y; _y++)
             toReturn(_x, _y) += m1.get(_x, _y) - m2.get(_x, _y);
-    return std::move(toReturn);
+    return toReturn;
 }
 
 template<unsigned int x, unsigned int y>

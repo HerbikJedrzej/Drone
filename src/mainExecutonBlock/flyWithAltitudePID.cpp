@@ -3,17 +3,20 @@
 #include "TrybeTools.hh"
 
 namespace flyWithAltitudePIDSpace{
-	double pidOutX = {0};
-	double pidOutY = {0};
-	double pidOutZ = {0};
-	double newPower = {0.0};
 	double yawl = 0.0;
 	double altitude = 0.0;
 	uint8_t dataToSave[4];
+	bool pidOn = false;
 }
 
 void flyWithAltitudePID(GlobalStruct& globals, DriversGroup& driversGroup, void(*)(uint32_t)){
 	globals.altitude = driversGroup.altitudeProvider->getAltitude();
+	if(driversGroup.radioParser->getJoyRightButtonOption()){
+		flyWithAltitudePIDSpace::pidOn = true;
+	}
+	if(driversGroup.radioParser->getJoyLeftButtonOption()){
+		flyWithAltitudePIDSpace::pidOn = false;
+	}
 	if(driversGroup.radioParser->getSpecialButtonOption()){
 		globals.sumPidX = driversGroup.pidX->getSum();
 		globals.sumPidY = driversGroup.pidY->getSum();
@@ -26,6 +29,7 @@ void flyWithAltitudePID(GlobalStruct& globals, DriversGroup& driversGroup, void(
 		driversGroup.memory->writeDMAwithoutDataAlocate(memoryMap::PID_X_sum_msb, flyWithAltitudePIDSpace::dataToSave, 4, nullptr);
 	}
 	if(driversGroup.radioParser->getFlyOnOption()){
+		driversGroup.pidH->outputFactor = 1.0 / driversGroup.ahrs->getHorizontalFactor();
 		driversGroup.pidX->setY((*driversGroup.ahrs)[0]);
 		driversGroup.pidY->setY((*driversGroup.ahrs)[1]);
 		driversGroup.pidZ->setY((*driversGroup.ahrs)[2]);
@@ -36,19 +40,34 @@ void flyWithAltitudePID(GlobalStruct& globals, DriversGroup& driversGroup, void(
 		flyWithAltitudePIDSpace::altitude += roundRadioSetValueToDouble(driversGroup.radioParser->getAltitudeIncremetionValue(), 220.0);
 		driversGroup.pidZ->setR(flyWithAltitudePIDSpace::yawl);
 		driversGroup.pidH->setR(flyWithAltitudePIDSpace::altitude);
-		globals.power = driversGroup.pidH->calculate() + globals.basePower;
+		if(flyWithAltitudePIDSpace::pidOn){
+			globals.power = driversGroup.pidH->calculate() + globals.basePower;
+		} else {
+			globals.power = roundRadioSetValueToDouble(driversGroup.radioParser->getAltitudeIncremetionValue(), 5) + globals.basePower;
+			flyWithAltitudePIDSpace::altitude = globals.altitude;
+		}
 		driversGroup.enginesControl->set(globals.power, driversGroup.pidX, driversGroup.pidY, driversGroup.pidZ);
 	}
 	else if(driversGroup.radioParser->getEngineOnOption()){
+		driversGroup.pidH->outputFactor = 1.0;
 		driversGroup.enginesControl->setAll(15);
 		driversGroup.pidX->reset(globals.sumPidX);
 		driversGroup.pidY->reset(globals.sumPidY);
 		driversGroup.pidZ->reset(globals.sumPidZ);
 		driversGroup.pidH->reset(0.0);
 		flyWithAltitudePIDSpace::yawl = (*driversGroup.ahrs)[2];
-		flyWithAltitudePIDSpace::altitude = globals.altitude + 0.5;
+		flyWithAltitudePIDSpace::altitude = globals.altitude;
+		flyWithAltitudePIDSpace::pidOn = false;
 	}
 	else{
+		driversGroup.pidH->outputFactor = 1.0;
 		driversGroup.enginesControl->setAll(0);
+		driversGroup.led.set(LedsList::angleGreaterThan15deg,
+			((*driversGroup.ahrs)[0] > 15.0) || ((*driversGroup.ahrs)[0] < -15.0) ||
+			((*driversGroup.ahrs)[1] > 15.0) || ((*driversGroup.ahrs)[1] < -15.0)
+		);
+		flyWithAltitudePIDSpace::pidOn = false;
 	}
+	driversGroup.measurementManager->setMeasureValue1(globals.altitude);
+	driversGroup.measurementManager->setMeasureValue2(flyWithAltitudePIDSpace::altitude);
 }

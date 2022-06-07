@@ -197,6 +197,14 @@ public:
     ~Data() = default;
 };
 
+class Offset : public Model{
+    const double offset;
+    void _input(const double value) override;
+public:
+    Offset(Model* _model, const double& _offset);
+    ~Offset() = default;
+};
+
 std::pair<std::vector<double>, std::vector<double>> simulate(models::Model* const model, const double startTime, const double endTime);
 std::pair<std::vector<double>, std::vector<double>> simulate(models::Model* const  model, const double time);
 std::pair<std::vector<double>, std::vector<double>> simulate(const unsigned int length, models::Model* const  model);

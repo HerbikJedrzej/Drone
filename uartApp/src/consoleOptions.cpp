@@ -19,8 +19,6 @@ void parseRecivedVector(std::vector<uint8_t>& rawData, std::vector<uint8_t>& par
     parsedData.clear();
     if(rawData.size() % 3 !=0)
         std::cout << "Raw data is not dividable by 3" << std::endl;
-    else
-        std::cout << "Raw data is dividable by 3" << std::endl;
     for(unsigned int i = 0; i < rawData.size(); i = i + 3){
         data = (rawData[i] - '0') << 4;
         data |= rawData[i + 1] - '0';
@@ -30,30 +28,25 @@ void parseRecivedVector(std::vector<uint8_t>& rawData, std::vector<uint8_t>& par
     }
 }
 
-void collectData(UART& uart, double& power, double& amplitude, double& frequency, std::vector<double>& time, std::vector<double>& setVal, std::vector<double>& measureVal){
-    ToggleOnUserInput run(true);
-    std::vector<uint8_t> rawData;
-    std::vector<uint8_t> data;
-    time.clear();
-    setVal.clear();
-    measureVal.clear();
-    run.reset();
-    printf("reading data. To finish press enter.");
-    while(run){
-        if(!uart.empty())
-            rawData.push_back(uart.getChar());
-    }
-    uart.clear();
-    parseRecivedVector(rawData, data);
-    double localTime = 0;
-	power = double(data[0]) / 3;
-	amplitude = double(data[1]) / 8 + 0.25;
-	frequency = double(data[2]) * 9.9 / 255 + 0.1;
-    for(unsigned int i = 3; i < data.size(); i += 2){
-        time.push_back(localTime);
-        localTime += 0.01;
-        setVal.push_back(power + amplitude * sin(6.28318530718 * frequency * localTime));
-        measureVal.push_back(double(uint16_t((data[i] << 8) | data[i + 1])) * 360.0 / 65535.0 - 180.0);
+namespace {
+    union {
+        double measurements[2];
+        uint8_t rawData[16];
+    } converter;
+}
+
+void convertData(const std::vector<uint8_t>& data, std::vector<double>& measure1, std::vector<double>& measure2){
+    measure1.clear();
+    measure2.clear();
+    if(data.size() % 16 !=0)
+        std::cout << "Data is not dividable by 16" << std::endl;
+    for(unsigned int i = 0; i < data.size() / 16; i++){
+        for(unsigned int j = 0; j < 8; j++){
+            converter.rawData[j]     = data[i*16 + j];
+            converter.rawData[j + 8] = data[i*16 + j + 8];
+        }
+        measure1.push_back(converter.measurements[0]);
+        measure2.push_back(converter.measurements[1]);
     }
 }
 
@@ -65,35 +58,43 @@ void collectData(UART& uart, std::vector<double>& time, std::vector<double>& mea
     measureVal1.clear();
     measureVal2.clear();
     run.reset();
-    printf("reading data. To finish press enter.");
-    while(run){
-        if(!uart.empty())
-            rawData.push_back(uart.getChar());
-    }
     uart.clear();
+    std::cout << "reading data. To finish press enter." << std::endl;
+    unsigned int dataCounter = 0;
+    uint16_t expectedSize = 0;
+    uint8_t previousChar;
+    bool firstLine = true;
+    while(run){
+        if(!uart.empty()){
+            if(firstLine){
+                char c = uart.getChar();
+                std::cout << c << std::flush;
+                if(c == '\n'){
+                    expectedSize = (previousChar - '0' < 3)? 500 : 1000;
+                    firstLine = false;
+                }
+                previousChar = c;
+            } else {
+                dataCounter++;
+                rawData.push_back(uart.getChar());
+                std::cout << "\r" << "Colected data (" << dataCounter / 3 / 16 << " of " << expectedSize << ")" << std::flush;
+            }
+        }
+    }
     parseRecivedVector(rawData, data);
+    convertData(data, measureVal1, measureVal2);
+    if(dataCounter / 3 / 16 > expectedSize)
+        std::cout << "There are more collected data than expected! Please send then from device once again!" << std::endl;
     double localTime = 0;
-    double minValue = 300000;
-    double removePart = 0;
-    for(unsigned int i = 3; i < data.size(); i += 4){
+    for(unsigned int i = 0; i < measureVal1.size(); i++){
         time.push_back(localTime);
         localTime += 0.01;
-        if(i == 3)
-            removePart = double(uint16_t((data[i] << 8) | data[i + 1])) / 10000.0;
-        measureVal1.push_back((double(uint16_t((data[i] << 8) | data[i + 1])) / 10000.0) - removePart);
-        measureVal2.push_back(double(uint16_t((data[i + 2] << 8) | data[i + 3])) / 100.0);
-        minValue = std::min(minValue, measureVal2.back());
     }
-    for(auto& elem : measureVal2)
-        elem -= minValue; 
 }
 
-void saveDataToFile(const double power, const double amplitude, const double frequency, const std::vector<double>& set, const std::vector<double>& measure, const std::string& name){
+void saveDataToFile(const std::vector<double>& set, const std::vector<double>& measure, const std::string& name){
     std::ofstream myfile;
     myfile.open ("./outputs/dataFiles/" + name + ".txt");
-    myfile << "Power: " << power << "\n";
-    myfile << "Amplitude: " << amplitude << "\n";
-    myfile << "Frequency: " << frequency << "\n";
     myfile << "Data:   1 - setValue    2 - measured value\n";
     for(unsigned int i = 0; i < set.size(); i++)
         myfile << set[i] << "                " << measure[i] << "\n";
@@ -106,11 +107,10 @@ void convertIncomingPidMeasurementDataToFile(UART& uart){
     std::cout << "Type name if file:" << std::endl;
     std::cin >> name;
     std::vector<double> s, m, t;
-    double p, a, f;
-    collectData(uart, p, a, f, t, s, m);
     system("clear");
+    collectData(uart, t, s, m);
     std::cout << "Recived recorded data size= " << t.size() << std::endl;
-    saveDataToFile(p, a, f, s, m, name);
+    saveDataToFile(s, m, name);
 }
 
 void convertIncomingAltitudeMeasurementDataToFile(UART& uart){
@@ -118,10 +118,10 @@ void convertIncomingAltitudeMeasurementDataToFile(UART& uart){
     std::cout << "Type name if file:" << std::endl;
     std::cin >> name;
     std::vector<double> s1, s2, t;
-    collectData(uart, t, s1, s2);
     system("clear");
+    collectData(uart, t, s1, s2);
     std::cout << "Recived recorded data size= " << t.size() << std::endl;
-    saveDataToFile(0, 0, 0, s1, s2, name);
+    saveDataToFile(s1, s2, name);
 }
 
 void convertIncomingPidMeasurementDataToFileAndPlot(UART& uart){
@@ -129,42 +129,30 @@ void convertIncomingPidMeasurementDataToFileAndPlot(UART& uart){
     std::cout << "Type name if file:" << std::endl;
     std::cin >> name;
     std::vector<double> s, m, t;
-    double p, a, f;
-    collectData(uart, p, a, f, t, s, m);
     system("clear");
-    std::cout << "Recived recorded data size= " << t.size() << std::endl;
-    saveDataToFile(p, a, f, s, m, name);
-    print(t, s, m, name);
+    collectData(uart, t, m, s);
+    std::cout << "Recived recorded data size = " << t.size() << std::endl;
+    saveDataToFile(s, m, name);
+    printPlot(t, "set value [%]", s, "measure [deg]", m, name);
 }
 
 void convertIncomingAltitudeMeasurementDataToFileAndPlot(UART& uart){
     std::string name;
     std::cout << "Type name if file:" << std::endl;
     std::cin >> name;
-    std::vector<double> s1, s2, t;
-    collectData(uart, t, s1, s2);
+    std::vector<double> setVal, measureVal, t;
     system("clear");
-    std::cout << "Recived recorded data size= " << t.size() << std::endl;
-    saveDataToFile(0, 0, 0, s1, s2, name);
-    printAltitudeMeasurement(t, s1, s2, name);
+    collectData(uart, t, measureVal, setVal);
+    std::cout << "Recived recorded data size = " << t.size() << std::endl;
+    saveDataToFile(setVal, measureVal, name);
+    printPlot(t, "set value [%]", setVal, "measure [m]", measureVal, name);
 }
 
-void print(const std::vector<double>& t, const std::vector<double>& s, const std::vector<double>& m, const std::string& name){
-    plot::figure_size(1200, 780);
-    plot::title("Filtred roll angle.");
-    plot::named_plot("measure [deg]", t, m);
-    plot::named_plot("set value [%]", t, s);
-    plot::legend();
-    plot::save("./outputs/plots/" + name + ".png");
-    plot::figure_close();
-    std::cout << "Plot saved in: ./outputs/plots/" + name + ".png" << std::endl;
-}
-
-void printAltitudeMeasurement(const std::vector<double>& t, const std::vector<double>& s, const std::vector<double>& m, const std::string& name){
+void printPlot(const std::vector<double>& t, const std::string& setValueName, const std::vector<double>& s, const std::string& measureValueName, const std::vector<double>& m, const std::string& name){
     plot::figure_size(1200, 780);
     plot::title("Filtrer altitude measurement.");
-    plot::named_plot("measure [m]", t, m);
-    plot::named_plot("set value [%]", t, s);
+    plot::named_plot(measureValueName, t, m);
+    plot::named_plot(setValueName, t, s);
     plot::legend();
     plot::save("./outputs/plots/" + name + ".png");
     plot::figure_close();

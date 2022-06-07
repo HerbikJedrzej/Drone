@@ -6,86 +6,128 @@
 #include <AltitudeProvider.hh>
 #include <math.h>
 
+#include <SumUpDataContainer.hh>
+#include <TestBarometer.hh>
+#include <VarianceProvider.hh>
+
+using TestHelpers::SumUpDataContainer;
+using TestHelpers::VarianceProvider;
+using TestMocks::BarometerMock;
+
+#define TestName ::testing::UnitTest::GetInstance()->current_test_info()->name()
+#define TestOutputName std::string("./moduleTestsOutputData/Filtration/") + TestName + ".png"
+
 namespace AltitudeFiltration{
 
-class Suming{
-    const double dt;
-    double sum;
-    std::vector<double> data;
-public:
-    Suming(const double& _dt):
-        dt(_dt),
-        sum(0){}
-    void addMeasure(const double& val){
-        sum += val * dt;
-        data.push_back(sum);
+class DataProvider{
+    class uncorrectFile{};
+    std::ifstream dataFile;
+    std::vector<double> dataAcc;
+    std::vector<double> dataBarometer;
+    std::vector<double> time;
+    void readData(){
+        double localData = 0.0;
+        double localTime = 0.0;
+        while(true){
+            dataFile >> localData;
+            if(dataFile.eof())
+                return;
+            dataBarometer.push_back(localData);
+            dataFile >> localData;
+            dataAcc.push_back(localData);
+            // dataAcc.push_back(0);
+            time.push_back(localTime);
+            localTime += 0.01;
+        }
     }
-    const std::vector<double> getSum(){
-        return data;
+public:
+    DataProvider(const std::string& name){
+        std::string tmp;
+        dataFile.open(name);
+        if(!dataFile.good())
+            throw uncorrectFile();
+        for(unsigned int i = 0; i < 2; i++){
+            std::getline(dataFile, tmp);
+        }
+        readData();
+    }
+    ~DataProvider(){
+        dataFile.close();
+    }
+    std::vector<double> getTime() const{
+        return time;
+    }
+    std::vector<double> getBarometerData() const{
+        return dataBarometer;
+    }
+    std::vector<double> getAccelerometerData() const{
+        return dataAcc;
     }
 };
 
-std::vector<double> addPrecissionError(const std::vector<double>& v, const double& precission){
-    std::vector<double> toReturn;
-    auto realNumericAround = [](const double& val)->int{
-        double difference = val - int(val);
-        difference *= difference;
-        if(difference < 0.25)
-            return int(val);
-        else
-            return int(val) + ((val < 0)? -1 : 1);
-    };
-    for(const auto& elem : v)
-        toReturn.push_back(realNumericAround(elem / precission) * precission);
-    return std::move(toReturn);
-}
-
-TEST(AltitudeFiltration_test, mainTest){
+void filterData(const DataProvider& dataProvider){
     constexpr double dt = 0.01;
-    Suming h(dt);
-    Suming hn(dt);
-    Suming v(dt);
-    Suming vn(dt);
-    std::vector<double> time, a, an;
-    constexpr unsigned int noiseFactor = 12;
-    constexpr unsigned int noiseFactorV = 2.5;
-    for(unsigned int i = 0; i < 500; i++){
-        double t = double(i) * dt;
-        time.push_back(t);
-        a.push_back((t - 3) * (t - 3) + 2*t - 8);
-        an.push_back(a.back() + double(rand() % (noiseFactor * 1000)) / 1000 - noiseFactor * 0.5 + 1.2);
-        v.addMeasure(a.back());
-        vn.addMeasure(an.back());
-    }
-    for(const auto& elem : v.getSum())
-        h.addMeasure(elem);
-    for(const auto& elem : vn.getSum())
-        hn.addMeasure(elem + double(rand() % (noiseFactorV * 1000)) / 1000 - noiseFactorV * 0.5);
-
-    auto measureFromAkcelerometer = hn.getSum();
-    auto barometerHmeasure = addPrecissionError(h.getSum(), 1.25);
-
-    std::vector<double> result, velocity = vn.getSum();
-    AltitudeProvider filter(0.03, dt);
-    for(unsigned int i = 0; i < barometerHmeasure.size(); i++){
-        filter.run(an[i], 0.012, barometerHmeasure[i]);
+    std::vector<double> time = dataProvider.getTime();
+    std::vector<double> altitude = dataProvider.getBarometerData();
+    std::vector<double> result;
+    BarometerMock barometer;
+    AltitudeProvider filter(&barometer, 0.3, dt);
+    filter.init(altitude[0]);
+    barometer.altitudeVariance = 0.3;
+    for(unsigned int i = 0; i < time.size(); i++){
+        barometer.altitude = altitude[i];
+        filter.run();
         result.push_back(filter.getAltitude());
     }
-
-    plot::figure_size(1200, 780);
-    plot::title("Filtred altitude.");
-    plot::named_plot("a", time, a);
-    plot::named_plot("an", time, an);
-    plot::named_plot("v", time, v.getSum());
+    plot::named_plot("altitude", time, altitude);
     plot::named_plot("result", time, result);
-    plot::named_plot("vn", time, vn.getSum());
-    plot::named_plot("h", time, measureFromAkcelerometer);
-    plot::named_plot("hn", time, hn.getSum());
-    plot::named_plot("barometer", time, barometerHmeasure);
-    plot::legend();
-    plot::save("./moduleTestsOutputData/Filtration/Filtred_altitude.png");
-    plot::figure_close();
-
 }
 
+TEST(AltitudeFiltration_test, MesuredDataSlot1){
+    plot::figure_size(1200, 780);
+    plot::title("Filtred altitude.");
+    filterData(DataProvider("./dataFiles/moduleTests/altitudeMesurements/data1.txt"));
+    filterData(DataProvider("./dataFiles/moduleTests/altitudeMesurements/flydata1.txt"));
+    plot::legend();
+    plot::save(TestOutputName);
+    plot::figure_close();
+}
+
+TEST(AltitudeFiltration_test, MesuredDataSlot2){
+    plot::figure_size(1200, 780);
+    plot::title("Filtred altitude.");
+    filterData(DataProvider("./dataFiles/moduleTests/altitudeMesurements/data2.txt"));
+    filterData(DataProvider("./dataFiles/moduleTests/altitudeMesurements/flydata2.txt"));
+    plot::legend();
+    plot::save(TestOutputName);
+    plot::figure_close();
+}
+
+TEST(AltitudeFiltration_test, MesuredDataSlot3){
+    plot::figure_size(1200, 780);
+    plot::title("Filtred altitude.");
+    filterData(DataProvider("./dataFiles/moduleTests/altitudeMesurements/data3.txt"));
+    plot::legend();
+    plot::save(TestOutputName);
+    plot::figure_close();
+}
+
+TEST(AltitudeFiltration_test, MesuredDataSlot4){
+    plot::figure_size(1200, 780);
+    plot::title("Filtred altitude.");
+    filterData(DataProvider("./dataFiles/moduleTests/altitudeMesurements/data4.txt"));
+    plot::legend();
+    plot::save(TestOutputName);
+    plot::figure_close();
+}
+
+TEST(AltitudeFiltration_test, MesuredDataSlot5){
+    plot::figure_size(1200, 780);
+    plot::title("Filtred altitude.");
+    filterData(DataProvider("./dataFiles/moduleTests/altitudeMesurements/data5.txt"));
+    filterData(DataProvider("./dataFiles/moduleTests/altitudeMesurements/flydata5.txt"));
+    plot::legend();
+    plot::save(TestOutputName);
+    plot::figure_close();
+}
 }

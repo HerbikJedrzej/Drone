@@ -13,6 +13,7 @@ public:
     double I;
     double D;
     double AntiWindup;
+    double outputFactor;
 protected:
     double minOut = {0};
     double maxOut = {0};
